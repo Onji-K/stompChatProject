@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- sockJs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js" integrity="sha512-1QvjE7BtotQjkq8PxLeF6P46gEpBRXuskzIVgjFpekzFVF4yjRgrQvTG1MTOJ3yQgvTteKAcO7DSZI92+u/yZw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- stomp -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js" integrity="sha512-iKDtgDyTHjAitUDdLljGhenhPwrbBfqTKWO1mkhSFH3A7blITC9MhYon6SjnMhp4o0rADGw9yAC6EW4t5a4K3g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <h2>내용</h2>
+    <input type="text" id="textInput">
+    <h2>유저이름</h2>
+    <input type="text" id="userInput">
+    <button id="send">전송</button>
+</body>
+<script>
+    var content = document.getElementById("textInput");
+    var user = document.getElementById("userInput");
+    var sendButton = document.getElementById("send");
+    
+    var sock = null;
+    var client = null;
+    
+    document.addEventListener('DOMContentLoaded', () =>{
+        connectStomp();
+
+        sendButton.addEventListener('click',function (event){
+            console.log("sendButton Click")
+            if (sock.readyState !== 1) {
+                return; // 1은 연결중 3은 연결 끊김
+            }
+            sendMessage();
+        });
+    })
+
+    function sendMessage() {
+        // (void) send(destination, headers = {}, body = '')
+        client.send("/chat/TTT",{},JSON.stringify({'message' : content.value,'userName' : user.value}));
+        console.log("sendMessage >>" ,  JSON.stringify({'message' : content.value,'userName' : user.value}));
+        
+    }
+
+    function connectStomp() {
+        sock = new SockJS("/stompTest");
+        client = Stomp.over(sock);
+        socket = sock;
+        
+        client.connect({},function(){
+            //sockJS는 연결 후에 메서드가 실행되어야함
+
+            console.log("Connected Stomp");
+
+            //구독하기
+            client.subscribe('/topic/message',function (event){
+                console.log("!!! event >> ",event);
+            })
+        })
+    }
+</script>
+
+</html>
